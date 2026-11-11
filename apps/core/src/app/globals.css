@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+/* Bare Phase 1 styling. The real tokens arrive from @fortitudo/tokens in Phase 2. */
+body {
+  background: #0e0e0d;
+  color: #e9e4d8;
+}
