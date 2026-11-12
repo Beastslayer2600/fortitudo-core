@@ -1,0 +1,39 @@
+/* Generated from src/index.ts by scripts/build-css.ts. Do not edit by hand. */
+@theme {
+  /* Clear Tailwind's defaults so a face can only use Fortitudo tokens. */
+  --color-*: initial;
+  --font-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --text-*: initial;
+
+  --color-base: #0f0e0d;
+  --color-surface: #191816;
+  --color-line: #2b2926;
+  --color-gold: #b8975a;
+  --color-text: #e8e3d9;
+  --color-headline: #ffffff;
+  --color-muted: #8e897f;
+
+  --font-serif: var(--font-serif-face, "EB Garamond"), Garamond, 'Times New Roman', Georgia, serif;
+  --font-sans: var(--font-sans-face, "Inter"), system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --text-label: 0.6875rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.75rem;
+  --text-display: 2.75rem;
+  --tracking-label: 0.16em;
+
+  --spacing-gutter: clamp(1.5rem, 8vw, 6rem);
+  --spacing-section: clamp(3rem, 10vw, 7.5rem);
+
+  --radius-sm: 3px;
+
+  --ease-calm: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --default-transition-duration: 600ms;
+  --default-transition-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+}

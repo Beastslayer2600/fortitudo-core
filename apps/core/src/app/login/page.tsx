@@ -1,22 +1,22 @@
 import { signIn } from "@/auth";
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>;
-}) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-6 px-8">
-      <h1 className="text-2xl">Fortitudo Core</h1>
-      {error ? <p className="text-sm opacity-70">That account is not allowed in.</p> : null}
+    <main className="flex min-h-dvh flex-col justify-center gap-10 px-gutter">
+      <div className="flex flex-col gap-4">
+        <p className="label">Fortitudo</p>
+        <h1 className="text-display leading-tight text-headline">Strength to build it, patience to keep it.</h1>
+        <div className="h-px w-16 bg-gold" />
+      </div>
+      {error ? <p className="text-sm text-muted">That account is not allowed in.</p> : null}
       <form
         action={async () => {
           "use server";
-          await signIn("github", { redirectTo: "/admin" });
+          await signIn("github", { redirectTo: "/" });
         }}
       >
-        <button type="submit" className="w-full rounded border border-current px-4 py-3 text-sm">
+        <button type="submit" className="min-h-11 rounded-sm border border-line px-6 text-sm text-text transition-colors hover:border-muted">
           Sign in with GitHub
         </button>
       </form>

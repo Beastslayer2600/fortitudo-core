@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import {
   check,
   integer,
+  numeric,
   jsonb,
   pgEnum,
   pgTable,
@@ -158,6 +159,11 @@ export const agentRuns = pgTable("agent_runs", {
   toolsCalled: jsonb("tools_called").notNull().default(sql`'[]'::jsonb`),
   tier: integer("tier").notNull().default(0),
   outcome: text("outcome"),
+  model: text("model"),
+  inputTokens: integer("input_tokens").notNull().default(0),
+  outputTokens: integer("output_tokens").notNull().default(0),
+  // What the run cost in USD at list price. The daily spend ceiling sums this.
+  costUsd: numeric("cost_usd", { precision: 12, scale: 6, mode: "number" }).notNull().default(0),
   createdAt: createdAt(),
 });
 
