@@ -8,6 +8,22 @@ type Turn = { role: "user" | "assistant"; text: string; tools?: ToolCall[]; fail
 
 const STORE = "fortitudo-chat";
 
+type RunView = { status: "working" | "done"; outcome: string; reply: string | null; toolsCalled: ToolCall[] };
+
+// The model runs on Gert's PC and can take a few minutes, so the run works in
+// the background and the chat checks on it.
+async function waitForRun(runId: string): Promise<RunView> {
+  const started = Date.now();
+  while (Date.now() - started < 7 * 60_000) {
+    await new Promise((r) => setTimeout(r, Date.now() - started < 20_000 ? 1500 : 4000));
+    const res = await fetch(`/api/agent/runs/${runId}`, { cache: "no-store" });
+    if (!res.ok) continue;
+    const run = (await res.json()) as RunView;
+    if (run.status === "done") return run;
+  }
+  throw new Error("No reply yet. The run may still finish; check Drafts in a few minutes.");
+}
+
 function load(): Turn[] {
   try {
     const raw = sessionStorage.getItem(STORE);
@@ -58,8 +74,10 @@ export function Chat() {
         body: JSON.stringify({ message, history }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error ?? `The agent returned ${res.status}.`);
-      setTurns((t) => [...t, { role: "assistant", text: data.reply || "(no reply)", tools: data.toolsCalled }]);
+      if (!res.ok || !data.runId) throw new Error(data.error ?? `The agent returned ${res.status}.`);
+      const run = await waitForRun(data.runId);
+      const failed = run.outcome.startsWith("error") || run.outcome.startsWith("refused");
+      setTurns((t) => [...t, { role: "assistant", text: run.reply || "(no reply)", tools: run.toolsCalled, failed }]);
     } catch (err) {
       const text = err instanceof Error ? err.message : "The request failed.";
       setTurns((t) => [...t, { role: "assistant", text, failed: true }]);
@@ -103,7 +121,7 @@ export function Chat() {
             </div>
           ))
         )}
-        {busy ? <p className="label rise">Working</p> : null}
+        {busy ? <p className="label rise">Working on your PC · this can take a minute or two</p> : null}
         <div ref={end} />
       </div>
 

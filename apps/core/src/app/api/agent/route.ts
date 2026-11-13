@@ -1,9 +1,10 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { currentUser } from "@/auth";
-import { anthropicClient, runAgent, type HistoryTurn } from "@/agent/gateway";
-import { db } from "@/db";
+import { runConfig } from "@/agent/config";
+import { executeRun, startRun, type HistoryTurn } from "@/agent/gateway";
 
 export const dynamic = "force-dynamic";
+// The run continues after the response, up to this limit.
 export const maxDuration = 300;
 
 const MAX_MESSAGE = 8000;
@@ -20,9 +21,10 @@ function parseHistory(value: unknown): HistoryTurn[] {
     .map((t) => ({ role: t.role, text: t.text.slice(0, MAX_MESSAGE) }));
 }
 
-// POST /api/agent  { message: string, history?: { role, text }[] }
-// The front door's only way to the agent. Owner-only for now; service tokens
-// per face arrive when a second face connects.
+// POST /api/agent  { message: string, history?: { role, text }[] }  ->  { runId }
+// Logs the request, answers at once with the run id, and works the run in the
+// background. The front door polls GET /api/agent/runs/:id for the reply.
+// Owner-only for now; service tokens per face arrive when a second face connects.
 export async function POST(req: Request) {
   const user = await currentUser();
   if (!user || user.role !== "owner") {
@@ -41,24 +43,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: `Keep the message under ${MAX_MESSAGE} characters.` }, { status: 400 });
   }
 
-  const modelName = process.env.AGENT_MODEL?.trim() || undefined;
-  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
-  const ceilingRaw = process.env.AGENT_DAILY_CEILING_USD?.trim();
-
-  const result = await runAgent(
-    {
-      db: db(),
-      model: apiKey ? anthropicClient(apiKey) : null,
-      modelName,
-      ceilingUsd: ceilingRaw ? Number(ceilingRaw) : undefined,
-    },
-    { face: "front-door", message, history: parseHistory(body.history) },
-  );
-
-  return NextResponse.json({
-    reply: result.reply,
-    outcome: result.outcome,
-    toolsCalled: result.toolsCalled,
-    runId: result.runId,
-  });
+  const config = runConfig();
+  const input = { face: "front-door", message, history: parseHistory(body.history) };
+  const started = await startRun(config, input);
+  if (started.queued) after(() => executeRun(config, started.runId, input, started.answerOnly));
+  return NextResponse.json({ runId: started.runId }, { status: 202 });
 }

@@ -1,7 +1,7 @@
-import type Anthropic from "@anthropic-ai/sdk";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import type { PgDatabase } from "drizzle-orm/pg-core";
 import { contentItems, contentRevisions, contentType, projects } from "@/db/schema";
+import type { ToolDefinition } from "./model";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Db = PgDatabase<any, any, any>;
@@ -22,7 +22,7 @@ export type ToolContext = { db: Db };
 export type AgentTool = {
   name: string;
   tier: Tier;
-  definition: Anthropic.Tool;
+  definition: ToolDefinition;
   run: (ctx: ToolContext, input: Record<string, unknown>) => Promise<unknown>;
 };
 
@@ -69,7 +69,7 @@ const readContent: AgentTool = {
       "Read Fortitudo content: guides, insights and page copy. With no id, lists items (newest first), " +
       "optionally filtered by project, type and status. With an id, returns that item in full with its revision history. " +
       "This is the only data the agent can read. There is no client data here and no tool for it.",
-    input_schema: {
+    parameters: {
       type: "object",
       properties: {
         id: { type: "string", description: "Content item id, to read one item in full." },
@@ -135,7 +135,7 @@ const saveDraft: AgentTool = {
       "Save a draft of a guide, insight or page copy. Without an id it creates a new draft; with an id it updates an " +
       "existing item that is still a draft. Every save is kept as a revision. This never publishes: only the owner " +
       "publishes, from the front door. Items that are approved or published cannot be changed by this tool.",
-    input_schema: {
+    parameters: {
       type: "object",
       properties: {
         id: { type: "string", description: "Id of an existing draft to update. Leave out to create a new draft." },
