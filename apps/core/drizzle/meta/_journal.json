@@ -15,6 +15,20 @@
       "when": 1794416625119,
       "tag": "0001_ledger_and_status_rules",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794467828431,
+      "tag": "0002_agent_run_spend",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794561193257,
+      "tag": "0003_agent_run_reply",
+      "breakpoints": true
     }
   ]
 }

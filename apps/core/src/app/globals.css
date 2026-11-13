@@ -1,7 +1,53 @@
 @import "tailwindcss";
+/* The app reads colour, type, spacing, radius and motion only from the shared tokens. */
+@import "@fortitudo/tokens/tokens.css";
 
-/* Bare Phase 1 styling. The real tokens arrive from @fortitudo/tokens in Phase 2. */
-body {
-  background: #0e0e0d;
-  color: #e9e4d8;
+@layer base {
+  html {
+    background: var(--color-base);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    -webkit-tap-highlight-color: transparent;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    text-wrap: balance;
+  }
+  ::selection {
+    background: var(--color-line);
+    color: var(--color-headline);
+  }
+  :focus-visible {
+    outline: 1px solid var(--color-gold);
+    outline-offset: 3px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0ms !important;
+      animation-duration: 0ms !important;
+    }
+  }
+}
+
+@utility label {
+  font-size: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+@utility rise {
+  animation: rise var(--default-transition-duration) var(--ease-calm) both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
 }

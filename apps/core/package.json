@@ -10,7 +10,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:seed": "tsx scripts/seed.ts",
-    "db:verify": "tsx scripts/verify-local.ts"
+    "db:verify": "tsx scripts/verify-local.ts && tsx scripts/verify-agent.ts"
   },
   "dependencies": {
     "@fortitudo/tokens": "workspace:*",
