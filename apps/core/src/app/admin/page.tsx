@@ -1,4 +1,5 @@
-import { requireUser, signOut } from "@/auth";
+import { requireUser } from "@/auth";
+import { Shell } from "@/components/shell";
 import { db } from "@/db";
 import { allTables } from "@/db/schema";
 
@@ -14,38 +15,32 @@ export default async function AdminPage() {
   );
 
   return (
-    <main className="mx-auto max-w-xl px-8 py-16">
-      <h1 className="text-2xl">Fortitudo Core</h1>
-      <p className="mt-2 text-sm opacity-70">
-        Signed in as {user.email} ({user.role})
-      </p>
-      <table className="mt-10 w-full text-left text-sm">
-        <thead>
-          <tr className="border-b border-current/30">
-            <th className="py-2 font-normal opacity-70">Table</th>
-            <th className="py-2 text-right font-normal opacity-70">Rows</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.name} className="border-b border-current/10">
-              <td className="py-2 font-mono">{row.name}</td>
-              <td className="py-2 text-right tabular-nums">{row.count}</td>
+    <Shell active="admin">
+      <main className="flex max-w-xl flex-col gap-8 px-gutter py-10">
+        <div className="flex flex-col gap-2">
+          <p className="label">Admin</p>
+          <h1 className="text-xl text-headline">Fortitudo Core</h1>
+          <p className="text-sm text-muted">
+            Signed in as {user.email} ({user.role})
+          </p>
+        </div>
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="border-b border-line">
+              <th className="py-2 font-normal text-muted">Table</th>
+              <th className="py-2 text-right font-normal text-muted">Rows</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      <form
-        className="mt-10"
-        action={async () => {
-          "use server";
-          await signOut({ redirectTo: "/login" });
-        }}
-      >
-        <button type="submit" className="text-sm underline opacity-70">
-          Sign out
-        </button>
-      </form>
-    </main>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.name} className="border-b border-line">
+                <td className="py-2 font-mono">{row.name}</td>
+                <td className="py-2 text-right tabular-nums">{row.count}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </main>
+    </Shell>
   );
 }

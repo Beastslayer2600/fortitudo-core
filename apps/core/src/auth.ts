@@ -23,11 +23,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 });
 
-// Use at the top of every protected page or route. Checks the session and
-// re-checks the users table, so removing a row locks that login out at once.
-export async function requireUser() {
+// The signed-in user, re-checked against the users table on every call so
+// removing a row locks that login out at once. Null when not allowed.
+export async function currentUser() {
   const session = await auth();
-  const user = await findUser(session?.user?.email);
+  return findUser(session?.user?.email);
+}
+
+// Use at the top of every protected page.
+export async function requireUser() {
+  const user = await currentUser();
   if (!user) redirect("/login");
+  return user;
+}
+
+// Use for actions only the owner may take.
+export async function requireOwner() {
+  const user = await requireUser();
+  if (user.role !== "owner") redirect("/");
   return user;
 }

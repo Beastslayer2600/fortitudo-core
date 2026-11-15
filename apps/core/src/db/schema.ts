@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import {
   check,
   integer,
+  numeric,
   jsonb,
   pgEnum,
   pgTable,
@@ -158,6 +159,14 @@ export const agentRuns = pgTable("agent_runs", {
   toolsCalled: jsonb("tools_called").notNull().default(sql`'[]'::jsonb`),
   tier: integer("tier").notNull().default(0),
   outcome: text("outcome"),
+  // The agent's answer, shown in the front door when the run finishes.
+  reply: text("reply"),
+  model: text("model"),
+  inputTokens: integer("input_tokens").notNull().default(0),
+  outputTokens: integer("output_tokens").notNull().default(0),
+  // USD cost of the run. Zero while the model runs on Gert's own PC; kept so a
+  // paid model could be metered without a schema change.
+  costUsd: numeric("cost_usd", { precision: 12, scale: 6, mode: "number" }).notNull().default(0),
   createdAt: createdAt(),
 });
 
