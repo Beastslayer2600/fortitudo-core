@@ -25,8 +25,12 @@ export function isJobAgent(v: unknown): v is JobAgent {
 export function refuseTask(task: string): string | null {
   if (!task.trim()) return "The task is empty.";
   if (task.length > MAX_TASK_CHARS) return `Keep the task under ${MAX_TASK_CHARS} characters.`;
-  for (const [re, what] of PATTERNS) {
-    if (re.test(task)) return `The task looks like it contains ${what}. Client detail never goes into a job.`;
-  }
+  const what = clientDetail(task);
+  return what ? `The task looks like it contains ${what}. Client detail never goes into a job.` : null;
+}
+
+/** What kind of client detail the text looks like it holds, or null. */
+export function clientDetail(text: string): string | null {
+  for (const [re, what] of PATTERNS) if (re.test(text)) return what;
   return null;
 }
