@@ -29,6 +29,15 @@ The agent's model is Gert's own: an open-weight model served by Ollama on his PC
 - At most 8 tool steps per request. Past the daily request cap (default 100) the agent answers but takes no actions; past twice the cap it stops calling the model.
 - Every request, including refused ones, is a row in `agent_runs` with its tools, tier, outcome, reply and token counts.
 
+## The front desk setting
+
+The chat screen has a **Front desk setting**: the https address of the front-desk service on Gert's laptop (published with Tailscale Serve). It is saved in this browser only.
+
+- Set: replies stream from the front desk, which can hand work to the slow agents and report status. Empty: the chat uses the core's own agent, as before.
+- Only `https://` addresses are accepted (the front door is https, so browsers block calls to plain http), plus `http://127.0.0.1` for local work.
+- The front door checks `/health` every 15 s. When the laptop is closed or unreachable it shows **Front desk offline** and stops sending. It never falls back silently to a different agent.
+- The status board reads from the core (`/api/jobs`, `/api/drafts`), never from the front desk, so it stays readable when the laptop is off. It needs the job queue API.
+
 ## Local checks
 
 ```
