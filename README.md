@@ -29,6 +29,24 @@ The agent's model is Gert's own: an open-weight model served by Ollama on his PC
 - At most 8 tool steps per request. Past the daily request cap (default 100) the agent answers but takes no actions; past twice the cap it stops calling the model.
 - Every request, including refused ones, is a row in `agent_runs` with its tools, tier, outcome, reply and token counts.
 
+## The job queue
+
+The front desk (a small model on Gert's laptop) hands work to slower agents through a queue in this database. Two service tokens, each opening only its own routes; both are refused while unset.
+
+| Route | Caller | What it does |
+|---|---|---|
+| `POST /api/jobs` `{agent, task}` | front desk | Creates a queued job. `agent` is `glm`, `content` or `helper`. Returns `{id}`. |
+| `GET /api/jobs?status=` | front desk, worker, owner | The 50 most recent jobs, oldest first. |
+| `GET /api/jobs/:id` | front desk, worker, owner | One job with its result and draft id. |
+| `GET /api/drafts?status=pending` | front desk, owner | Content items still in the draft state. |
+| `POST /api/jobs/claim` `{agents?}` | worker | Atomically takes the oldest queued job and marks it running. |
+| `PATCH /api/jobs/:id` `{status, result?, draftId?}` | worker | Finishes a running job as `done` or `failed`. |
+
+- A job is `queued`, then `running`, then `done` or `failed`. Nothing skips a step or finishes twice.
+- A task that looks like a file path, a client folder or an ID number is refused. Client detail never goes into a job.
+- Nothing here publishes or deletes. A draft a job produces stays a draft until the owner approves it.
+- Set `FRONTDESK_TOKEN` and `WORKER_TOKEN` in Vercel. Calls from outside a browser to a `*.vercel.app` URL also need Vercel's deployment-protection bypass, or a custom domain.
+
 ## Local checks
 
 ```
