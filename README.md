@@ -37,6 +37,23 @@ The chat screen has a **Front desk setting**: the https address of the front-des
 - Only `https://` addresses are accepted (the front door is https, so browsers block calls to plain http), plus `http://127.0.0.1` for local work.
 - The front door checks `/health` every 15 s. When the laptop is closed or unreachable it shows **Front desk offline** and stops sending. It never falls back silently to a different agent.
 - The status board reads from the core (`/api/jobs`, `/api/drafts`), never from the front desk, so it stays readable when the laptop is off. It needs the job queue API.
+## The job queue
+
+The front desk (a small model on Gert's laptop) hands work to slower agents through a queue in this database. Two service tokens, each opening only its own routes; both are refused while unset.
+
+| Route | Caller | What it does |
+|---|---|---|
+| `POST /api/jobs` `{agent, task}` | front desk | Creates a queued job. `agent` is `glm`, `content` or `helper`. Returns `{id}`. |
+| `GET /api/jobs?status=` | front desk, worker, owner | The 50 most recent jobs, oldest first. |
+| `GET /api/jobs/:id` | front desk, worker, owner | One job with its result and draft id. |
+| `GET /api/drafts?status=pending` | front desk, owner | Content items still in the draft state. |
+| `POST /api/jobs/claim` `{agents?}` | worker | Atomically takes the oldest queued job and marks it running. |
+| `PATCH /api/jobs/:id` `{status, result?, draftId?}` | worker | Finishes a running job as `done` or `failed`. |
+
+- A job is `queued`, then `running`, then `done` or `failed`. Nothing skips a step or finishes twice.
+- A task that looks like a file path, a client folder or an ID number is refused. Client detail never goes into a job.
+- Nothing here publishes or deletes. A draft a job produces stays a draft until the owner approves it.
+- Set `FRONTDESK_TOKEN` and `WORKER_TOKEN` in Vercel. Calls from outside a browser to a `*.vercel.app` URL also need Vercel's deployment-protection bypass, or a custom domain.
 
 ## Local checks
 

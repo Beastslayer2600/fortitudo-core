@@ -170,6 +170,25 @@ export const agentRuns = pgTable("agent_runs", {
   createdAt: createdAt(),
 });
 
+// The job queue between the front desk and the slow agents. The front desk
+// creates jobs; a worker claims them (queued -> running) and finishes them
+// (running -> done | failed). A job holds a task description and a result,
+// never client data (the API refuses it). Its draft, if any, is a content item
+// in the draft state: only the owner publishes.
+export const jobStatus = pgEnum("job_status", ["queued", "running", "done", "failed"]);
+export const jobAgent = pgEnum("job_agent", ["glm", "content", "helper"]);
+
+export const jobs = pgTable("jobs", {
+  id: id(),
+  agent: jobAgent("agent").notNull(),
+  task: text("task").notNull(),
+  status: jobStatus("status").notNull().default("queued"),
+  result: text("result"),
+  draftId: uuid("draft_id").references(() => contentItems.id),
+  createdAt: createdAt(),
+  updatedAt: updatedAt(),
+});
+
 // Every table, in the order the architecture document lists them.
 export const allTables = {
   users,
@@ -184,4 +203,5 @@ export const allTables = {
   memory_notes: memoryNotes,
   approvals,
   agent_runs: agentRuns,
+  jobs,
 } as const;
