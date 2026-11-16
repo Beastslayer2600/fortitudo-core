@@ -5,8 +5,9 @@ import { PGlite } from "@electric-sql/pglite";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
-import { contentItems, projects } from "../src/db/schema";
+import { contentItems, contentRevisions, projects } from "../src/db/schema";
 import { seed } from "../src/db/seed-data";
+import { createAgentDraft } from "../src/jobs/drafts";
 import { refuseTask } from "../src/jobs/guard";
 import { claimJob, createJob, finishJob, getJob, isFailure, listJobs, pendingDrafts } from "../src/jobs/queue";
 
@@ -72,6 +73,26 @@ async function main() {
   check("bad status filter is refused", (await listJobs(db, "nope")) === null);
   const drafts = await pendingDrafts(db);
   check("pending drafts are drafts only", drafts.some((d) => d.id === draft!.id) && !drafts.some((d) => d.id === published!.id));
+
+  // Agent drafts written by the worker: always draft, always an agent revision.
+  const made2 = await createAgentDraft(db, { project: project!.slug, title: "Saving for a child: a first guide", body: "Body text." });
+  check("agent draft created", !isFailure(made2));
+  if (isFailure(made2)) return;
+  const [item] = await db.select().from(contentItems).where(eq(contentItems.id, made2.id));
+  check("agent draft is a draft, not approved or published", item?.status === "draft" && item.publishedAt === null);
+  check("agent draft has a unique slug from its title", /^saving-for-a-child-a-first-guide-[0-9a-f]{6}$/.test(item!.slug));
+  const [rev] = await db.select().from(contentRevisions).where(eq(contentRevisions.contentItemId, made2.id));
+  check("agent draft has a revision marked as the agent's", rev?.author === "agent" && rev.body === "Body text.");
+  const second = await createAgentDraft(db, { project: project!.slug, title: "Saving for a child: a first guide", body: "Again." });
+  check("same title twice does not clash", !isFailure(second));
+  check("unknown project refused", isFailure(await createAgentDraft(db, { project: "nope", title: "T", body: "B" })));
+  check("bad type refused", isFailure(await createAgentDraft(db, { project: project!.slug, title: "T", body: "B", type: "published" })));
+  check("empty body refused", isFailure(await createAgentDraft(db, { project: project!.slug, title: "T", body: " " })));
+  check("client detail in the title refused", isFailure(await createAgentDraft(db, { project: project!.slug, title: "Notes from C:\\Werk\\Clients\\Smith", body: "B" })));
+  const withDraft = await createJob(db, "content", "Draft a guide");
+  const claimed = isFailure(withDraft) ? null : await claimJob(db, ["content"]);
+  const finished = claimed ? await finishJob(db, claimed.id, { status: "done", result: "ok", draftId: made2.id }) : null;
+  check("a job can carry the agent's draft", !!finished && !isFailure(finished) && finished.draftId === made2.id);
 }
 
 main().catch((err) => {

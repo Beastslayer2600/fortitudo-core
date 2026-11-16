@@ -48,6 +48,7 @@ The front desk (a small model on Gert's laptop) hands work to slower agents thro
 | `GET /api/jobs/:id` | front desk, worker, owner | One job with its result and draft id. |
 | `GET /api/drafts?status=pending` | front desk, owner | Content items still in the draft state. |
 | `POST /api/jobs/claim` `{agents?}` | worker | Atomically takes the oldest queued job and marks it running. |
+| `POST /api/drafts` `{project, title, body, type?}` | worker | Saves what an agent wrote as a **draft** (never approved or published) with an agent revision. Returns `{id}` to attach to the job. |
 | `PATCH /api/jobs/:id` `{status, result?, draftId?}` | worker | Finishes a running job as `done` or `failed`. |
 
 - A job is `queued`, then `running`, then `done` or `failed`. Nothing skips a step or finishes twice.
