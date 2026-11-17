@@ -36,6 +36,13 @@
       "when": 1794831268404,
       "tag": "0004_jobs_queue",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794903153917,
+      "tag": "0005_worker_queue",
+      "breakpoints": true
     }
   ]
 }

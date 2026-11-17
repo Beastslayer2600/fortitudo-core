@@ -5,9 +5,10 @@ import { signOut } from "@/auth";
 const NAV = [
   { href: "/", label: "Chat" },
   { href: "/drafts", label: "Drafts" },
+  { href: "/jobs", label: "Jobs" },
 ];
 
-export function Shell({ active, children }: { active: "chat" | "drafts" | "admin"; children: ReactNode }) {
+export function Shell({ active, children }: { active: "chat" | "drafts" | "admin" | "jobs"; children: ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
       <header className="flex items-baseline justify-between gap-6 px-gutter pt-8 pb-5">
