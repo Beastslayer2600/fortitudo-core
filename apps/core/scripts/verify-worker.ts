@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
 import { workerJobEvents, workerJobs, workers, workerSchedules } from "../src/db/worker-schema";
+import { importSkills } from "../src/worker/import-skills";
 import { hashToken } from "../src/worker/auth";
 import { handleClaim, handleComplete, handleEscalate, handleEvents, handleFail } from "../src/worker/handlers";
 import { activeJobCount, cancelJob, createJob, createSchedule, createWorker, isFailure, jobView, saveSkill, setPaused, workerStatus } from "../src/worker/service";
@@ -20,6 +21,8 @@ const at = (s: number) => new Date(T0.getTime() + s * 1000);
 async function main() {
   const db = drizzle(new PGlite());
   await migrate(db, { migrationsFolder: "./drizzle" });
+
+  check("four pinned skills import", (await importSkills(db)) === 4 && (await importSkills(db)) === 0);
 
   // Workers: tokens come back once; only the hash is stored.
   const small = await createWorker(db, "laptop-1", "small");
