@@ -205,3 +205,6 @@ export const allTables = {
   agent_runs: agentRuns,
   jobs,
 } as const;
+
+// The worker job queue lives in its own file; it adds tables only.
+export * from "./worker-schema";
