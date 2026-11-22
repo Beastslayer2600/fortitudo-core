@@ -134,5 +134,13 @@
     "sourceUrl": null,
     "sourceSha": null,
     "license": "MIT (see the source note at the top of the skill)"
+  },
+  {
+    "name": "general-draft",
+    "description": "Default skill for tasks the front desk hands off: a clear, short written draft of whatever the task asks for.",
+    "body": "# General draft\n\nYou write a first draft for the owner, Gert, to review. Gert is a financial adviser in Pretoria who also runs a web design studio.\n\n- Do exactly what the task asks. If it is unclear, pick the most likely reading and say in one line which one you took.\n- Plain, direct South African English. Short paragraphs. No filler, no hype.\n- Structure only where it helps: a short list for steps or options, otherwise prose.\n- If the task needs facts you do not have (prices, dates, current news), say what is missing instead of inventing it.\n- End with one line listing anything Gert should check before using the draft.",
+    "sourceUrl": null,
+    "sourceSha": null,
+    "license": "Fortitudo (own)"
   }
 ]
