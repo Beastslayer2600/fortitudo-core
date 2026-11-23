@@ -74,13 +74,15 @@ export async function handleClaim(req: Request, db: Db, now = new Date()): Promi
   const d = body.worker;
   if (!onlyKeys(body, ["worker"]) || !isObj(d)) return bad();
   if (
-    !onlyKeys(d, ["id", "version", "maxTier", "backends", "models", "onlyBig"]) ||
+    !onlyKeys(d, ["id", "version", "maxTier", "backends", "models", "onlyBig", "asSmall"]) ||
     !isStr(d.id, 64, 1) ||
     !isInt(d.version, 1) ||
     !oneOf(d.maxTier, TIERS) ||
     !strList(d.backends, 10, 40) ||
     !strList(d.models, 20, 120) ||
-    (d.onlyBig !== undefined && typeof d.onlyBig !== "boolean")
+    (d.onlyBig !== undefined && typeof d.onlyBig !== "boolean") ||
+    (d.asSmall !== undefined && typeof d.asSmall !== "boolean") ||
+    (d.onlyBig === true && d.asSmall === true)
   ) {
     return bad();
   }
@@ -100,11 +102,14 @@ export async function handleClaim(req: Request, db: Db, now = new Date()): Promi
   await materialiseSchedules(db, now);
   await expireLeases(db, now);
 
-  const tierOk = w.maxTier === "big" ? (d.onlyBig === true ? sql`${workerJobs.tier} = 'big'` : sql`true`) : sql`(${workerJobs.tier} = 'small' or ${workerJobs.allowSmallFallback})`;
+  // A big worker can claim as a small one (asSmall) when only its fast model is up, or as big-only (onlyBig).
+  const asSmall = w.maxTier === "small" || d.asSmall === true;
+  const claimTier = asSmall ? "small" : w.maxTier;
+  const tierOk = asSmall ? sql`(${workerJobs.tier} = 'small' or ${workerJobs.allowSmallFallback})` : d.onlyBig === true ? sql`${workerJobs.tier} = 'big'` : sql`true`;
   const pick = sql`(select ${workerJobs.id} from ${workerJobs}
     where ${workerJobs.status} = 'queued' and ${workerJobs.runAfter} <= ${now.toISOString()}
     and not ${workerJobs.cancelRequested} and ${tierOk}
-    order by (${workerJobs.tier} = ${w.maxTier}) desc, ${workerJobs.createdAt} limit 1 for update skip locked)`;
+    order by (${workerJobs.tier} = ${claimTier}) desc, ${workerJobs.createdAt} limit 1 for update skip locked)`;
   const [job] = await db
     .update(workerJobs)
     .set({ status: "running", claimedBy: w.id, leaseExpiresAt: secs(now, LEASE_SECONDS), updatedAt: now })
