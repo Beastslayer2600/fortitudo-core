@@ -55,6 +55,7 @@ async function main() {
   check("400 for unknown field", (await call(handleClaim as never, small.token, { worker: { id: "laptop-1", version: 1, maxTier: "small", backends: [], models: [], extra: 1 } }, at(0))).status === 400);
   check("403 when worker.id is not this token's worker", (await call(handleClaim as never, small.token, claimBody("pc-1", "small"), at(10))).status === 403);
   check("400 when maxTier does not match", (await call(handleClaim as never, small.token, claimBody("laptop-1", "big"), at(20))).status === 400);
+  check("400 when onlyBig is not a boolean", (await call(handleClaim as never, big.token, { worker: { ...claimBody("pc-1", "big").worker, onlyBig: "yes" } }, at(21))).status === 400);
 
   // Skill + jobs
   check("skill saved", !isFailure(await saveSkill(db, { name: "social-content", description: "Posts", body: "Write social posts." })));

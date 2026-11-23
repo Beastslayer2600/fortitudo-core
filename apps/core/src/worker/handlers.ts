@@ -74,12 +74,13 @@ export async function handleClaim(req: Request, db: Db, now = new Date()): Promi
   const d = body.worker;
   if (!onlyKeys(body, ["worker"]) || !isObj(d)) return bad();
   if (
-    !onlyKeys(d, ["id", "version", "maxTier", "backends", "models"]) ||
+    !onlyKeys(d, ["id", "version", "maxTier", "backends", "models", "onlyBig"]) ||
     !isStr(d.id, 64, 1) ||
     !isInt(d.version, 1) ||
     !oneOf(d.maxTier, TIERS) ||
     !strList(d.backends, 10, 40) ||
-    !strList(d.models, 20, 120)
+    !strList(d.models, 20, 120) ||
+    (d.onlyBig !== undefined && typeof d.onlyBig !== "boolean")
   ) {
     return bad();
   }
@@ -99,7 +100,7 @@ export async function handleClaim(req: Request, db: Db, now = new Date()): Promi
   await materialiseSchedules(db, now);
   await expireLeases(db, now);
 
-  const tierOk = w.maxTier === "big" ? sql`true` : sql`(${workerJobs.tier} = 'small' or ${workerJobs.allowSmallFallback})`;
+  const tierOk = w.maxTier === "big" ? (d.onlyBig === true ? sql`${workerJobs.tier} = 'big'` : sql`true`) : sql`(${workerJobs.tier} = 'small' or ${workerJobs.allowSmallFallback})`;
   const pick = sql`(select ${workerJobs.id} from ${workerJobs}
     where ${workerJobs.status} = 'queued' and ${workerJobs.runAfter} <= ${now.toISOString()}
     and not ${workerJobs.cancelRequested} and ${tierOk}
