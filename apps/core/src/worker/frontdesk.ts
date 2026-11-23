@@ -15,7 +15,7 @@ export const AGENT_ROUTES: Record<JobAgent, Route> = {
   // Heavy drafting or analysis: a big worker, but a small one may take it if no big one is free.
   glm: { kind: "research_brief", skill: "general-draft", tier: "big", allowSmallFallback: true },
   // Public content drafts.
-  content: { kind: "social_post", skill: "social-content", tier: "small", allowSmallFallback: false },
+  content: { kind: "social_post", skill: "gert-social-post", tier: "small", allowSmallFallback: false },
   // Small chores.
   helper: { kind: "research_brief", skill: "general-draft", tier: "small", allowSmallFallback: false },
 };
