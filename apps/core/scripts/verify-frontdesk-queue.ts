@@ -30,7 +30,7 @@ async function main() {
   const [glm] = await db.select().from(workerJobs).where(eq(workerJobs.id, ids.glm!));
   check("glm goes to a big worker, small fallback allowed", glm?.tier === "big" && glm.allowSmallFallback === true && glm.kind === "research_brief");
   const [content] = await db.select().from(workerJobs).where(eq(workerJobs.id, ids.content!));
-  check("content becomes a small social_post with the social-content skill", content?.tier === "small" && content.kind === "social_post" && content.skill === "social-content");
+  check("content becomes a small social_post with the gert-social-post skill", content?.tier === "small" && content.kind === "social_post" && content.skill === "gert-social-post");
   check("the task is stored unchanged as the prompt", content?.prompt === "Draft three ideas for a post about saving (content).");
   check("the skill text is assembled into the system prompt", !!content?.system && content.system.length > 100);
 
