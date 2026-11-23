@@ -5,17 +5,21 @@ import { useEffect, useState } from "react";
 import type { StatusBoard as Board } from "@/lib/frontdesk";
 
 // The status board reads straight from the core, never from the front desk, so
-// it stays readable when the laptop is closed or unreachable.
+// it stays readable when the laptop is closed or unreachable. Jobs come from the
+// worker queue (the one the laptop and PC claim from).
 async function load(): Promise<Board> {
   const [jobs, drafts] = await Promise.all([
-    fetch("/api/jobs", { cache: "no-store" }),
+    fetch("/api/local-ai/jobs", { cache: "no-store" }),
     fetch("/api/drafts?status=pending", { cache: "no-store" }),
   ]);
   if (!jobs.ok || !drafts.ok) throw new Error("status unavailable");
-  return { jobs: (await jobs.json()).jobs, drafts: (await drafts.json()).drafts };
+  // The API lists oldest first; show newest first so recent work is not buried by old failures.
+  const list: Board["jobs"] = (await jobs.json()).jobs;
+  return { jobs: [...list].reverse(), drafts: (await drafts.json()).drafts };
 }
 
-const ORDER = { running: 0, queued: 1, failed: 2, done: 3 } as const;
+// Open work first, then finished work (done or failed) newest first. The sort is stable.
+const ORDER = { running: 0, queued: 1, failed: 2, done: 2 } as const;
 
 export function StatusBoard({ refreshKey }: { refreshKey: number }) {
   const [board, setBoard] = useState<Board | null>(null);
@@ -57,9 +61,9 @@ export function StatusBoard({ refreshKey }: { refreshKey: number }) {
         {jobs.map((j) => (
           <li key={j.id} className="flex gap-3">
             <span className="label w-16 shrink-0">{j.status}</span>
-            <span className="text-text">
+            <Link href={`/jobs/${j.id}`} className="text-text hover:underline">
               {j.agent}: {j.task.length > 70 ? `${j.task.slice(0, 67)}...` : j.task}
-            </span>
+            </Link>
           </li>
         ))}
         {board.drafts.length > 0 ? (
